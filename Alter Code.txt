@@ -1,0 +1,299 @@
+//    if ((blinkRole == WEAPON) & (playerId == attackerId)) { // The weapon owner attacks 
+//      fightTimer.set(0);
+//    }
+
+
+
+  if ((flags & 2) == 2) {
+    setColorOnFace(GREEN, 1);  
+  }
+  if ((flags & 4) == 4) {
+    setColorOnFace(GREEN, 2);  
+  }
+  if ((flags & 8) == 8) {
+    setColorOnFace(GREEN, 3);  
+  }
+  if ((flags & 16) == 16) {
+    setColorOnFace(GREEN, 4);  
+  }
+  if ((flags & 32) == 32) {
+    setColorOnFace(GREEN, 5);  
+  }
+
+
+
+
+//  if (playerActivated == 2){
+//    fightTimer.set(FIGHT_DURATION);
+//    fightStarted = true;
+//  }
+
+
+
+          switch (playerId){
+            case 1:
+//              if (!fightStarted)
+                setColor(C_BLOCK1);
+//              else if (fightTimer.isExpired())
+//                setColor(OFF);
+//              else
+//                setColorOnBlock(C_BLOCK1);
+              break;
+            case 2:
+//              if (!fightStarted)
+                setColor(C_BLOCK2);
+//              else if (fightTimer.isExpired())
+//                setColor(OFF);
+//              else
+//                setColorOnBlock(C_BLOCK2);
+              break;
+          }
+
+
+  
+    
+      switch (gameState) {
+        case 1: //READY:
+          if (waitTimer.isExpired()) {
+            gameState = 2; //PREPARE;
+            signalState = COMMUNICATE;
+            prepareTimer.set(PREPARE_DURATION);
+          }
+          break;
+        case 2: //PREPARE:
+          if (prepareTimer.isExpired()) {
+            gameState = 3; //FIGHT;
+            signalState = COMMUNICATE;
+            fightTimer.set(FIGHT_DURATION);
+          }
+          break;
+        case 3: //FIGHT:
+          if (fightTimer.isExpired()) {
+            gameState = 5; //GAMEOVER;
+            signalState = COMMUNICATE;
+          }
+          break;
+      }
+
+
+
+  switch (gameState) {
+    case 1: //READY:
+      playerCount++;
+      playerActivated = playerCount;
+      break;
+    case 2: //PREPARE:
+      // Don't do anything, just wait
+      break;
+    case 3: //FIGHT:
+      fightTimer.set(FIGHT_DURATION);
+      break;
+    case 4: //ATTACK:
+      break;
+  }
+
+
+
+    switch (gameState) {
+      case 0: //SETUP:
+      case 1: //READY:
+        if (blinkRole == UNDEFINED) {
+          playerCount++;
+          playerId = playerCount;
+          blinkRole = PLAYER;
+          gameState = 1;  //READY;
+          signalState = COMMUNICATE;
+        }
+        break;
+      case 2: //PREPARE:
+      case 3: //FIGHT:
+//        if (blinkRole == PLAYER) {
+//          gameState = 4; //ATTACK;
+//          signalState = COMMUNICATE;
+//        }
+        break;
+      case 4://ATTACK:
+        break;
+      case 5://GAMEOVER:
+        break;
+    }
+
+
+
+// Communicate until all neighbors are communicating
+void communicating() {
+  if (!checkAllNeighborsState(WAIT))
+    signalState = FINISH;
+}
+
+// Wait until all neighbors have stopped communicating
+void finishing() {
+  if (!checkAllNeighborsState(COMMUNICATE))
+    signalState = WAIT;
+}
+
+
+  
+  switch (gameState) {
+    case 0: //SETUP:
+    case 1: //READY:
+      bool isPlayer = (blinkRole == PLAYER);
+      lastByte = (byte)isPlayer;
+      break;
+    case 2: //PREPARE:
+    case 3: //FIGHT:
+      break;
+    case 4: //ATTACK:
+//      setValueSentOnAllFaces((signalState << 4) + (gameState << 1) + (playerId - 1));  
+      break;
+    case 5: //GAMEOVER:
+      break;
+  }
+
+
+  
+  switch (signalState) {
+    case WAIT:
+      handleUserInteraction();
+      handleBlinkSignals();
+      actAsRole();
+      break;
+    case COMMUNICATE:
+      if (!checkAllNeighborsState(WAIT)) {
+        signalState = FINISH;
+      }
+      break;
+    case FINISH:
+      if (!checkAllNeighborsState(COMMUNICATE)) {
+        signalState = WAIT;
+      }
+      break;
+  }
+
+
+
+
+  switch (signalState) {
+    case WAIT:
+      switch (blinkRole) {
+        case UNDEFINED:
+          setColor(C_SETUP);
+          break;
+        case PLAYER:
+          switch (playerId) {
+            case 1:
+              setPlayerColor(C_PLAYER1);
+              break;
+            case 2:
+              setPlayerColor(C_PLAYER2);
+              break;
+          }
+          break;
+        case WEAPON:
+          switch (playerId) {
+            case 1:
+              setWeaponColor(C_WEAPON1);
+              break;
+            case 2:
+              setWeaponColor(C_WEAPON2);
+              break;
+          }
+          break;
+        case REFEREE:
+          setRefereeColor(C_REFEREE);
+          break;
+      }
+      break;
+  }
+
+
+
+
+//  switch (gameState) {
+//    case SETUP:
+//    case READY:
+//    case PREPARE:
+//      break;
+//    case FIGHT:
+//      int remaining = fightTimer.getRemaining();
+//      byte faceId = faceIdToPlayer + 6;
+//      if (remaining > 6000) {
+//        setColor(color);
+//      }
+//      else if (remaining > 4000) {
+//        setColorOnFace(color, (faceId % 6));
+//        setColorOnFace(color, ((faceId - 1) % 6));
+//        setColorOnFace(color, ((faceId + 1) % 6));
+//        setColorOnFace(color, ((faceId - 2) % 6));
+//        setColorOnFace(color, ((faceId + 2) % 6));
+//        setColorOnFace(OFF, ((faceId + 3) % 6));
+//      }
+//      else if (remaining > 2000) {
+//        setColorOnFace(color, (faceId % 6));
+//        setColorOnFace(color, ((faceId - 1) % 6));
+//        setColorOnFace(color, ((faceId + 1) % 6));
+//        setColorOnFace(OFF, ((faceId - 2) % 6));
+//        setColorOnFace(OFF, ((faceId + 2) % 6));
+//        setColorOnFace(OFF, ((faceId + 3) % 6));
+//      }
+//      else if (remaining > 0) {
+//        setColorOnFace(color, (faceId % 6));
+//        setColorOnFace(OFF, ((faceId - 1) % 6));
+//        setColorOnFace(OFF, ((faceId + 1) % 6));
+//        setColorOnFace(OFF, ((faceId - 2) % 6));
+//        setColorOnFace(OFF, ((faceId + 2) % 6));
+//        setColorOnFace(OFF, ((faceId + 3) % 6));
+//      }
+//      else {
+//        setColor(OFF);
+//      }
+//      break;
+//    case ATTACK:
+//      break;
+//    case GAMEOVER:
+//      setColor(RED);
+//      break;
+//  }
+
+
+//  switch (gameState) { 
+//    case SETUP:
+//    case READY:
+//      setColor(color);
+//      break;
+//    case PREPARE:
+//      int remaining = prepareTimer.getRemaining();
+//      int pulseProgress = remaining % 1000;
+//      byte pulseMapped = map(pulseProgress, 0, 1000, 0, 255);
+//      byte dimness = sin8_C(pulseMapped);
+//      Color pulseColor = dim(color, dimness);
+//      if (remaining > 2000) {
+//        setColor(pulseColor);
+//      }
+//      else if (remaining > 1000) {
+//        setColorOnFace(OFF, 0);
+//        setColorOnFace(OFF, 3);
+//        setColorOnFace(pulseColor, 1);
+//        setColorOnFace(pulseColor, 4);
+//        setColorOnFace(pulseColor, 2);
+//        setColorOnFace(pulseColor, 5);
+//      }
+//      else if (remaining > 0) {
+//        setColorOnFace(pulseColor, 0);
+//        setColorOnFace(pulseColor, 3);
+//        setColorOnFace(OFF, 1);
+//        setColorOnFace(OFF, 4);
+//        setColorOnFace(OFF, 2);
+//        setColorOnFace(OFF, 5);
+//      }
+//      else {
+//        setColor(YELLOW);
+//      }
+//      break;
+//    case FIGHT:
+//      setColor(ORANGE);
+//      break;
+//    case GAMEOVER:
+//      setColor(RED);
+//      break;
+//  }
